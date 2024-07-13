@@ -1,0 +1,8 @@
+fastapi
+pydantic
+requests
+pydub
+uvicorn
+python-dotenv
+redis
+aioredis
