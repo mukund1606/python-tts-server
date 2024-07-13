@@ -5,4 +5,4 @@ pydub
 uvicorn
 python-dotenv
 redis
-aioredis
+gunicorn

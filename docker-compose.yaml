@@ -24,3 +24,7 @@ services:
     image: redis:latest
     ports:
       - '6379:6379'
+    deploy:
+      resources:
+        limits:
+          memory: '1G' # Set Redis memory limit to 1GB
