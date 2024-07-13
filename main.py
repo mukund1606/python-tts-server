@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List
@@ -94,6 +94,13 @@ async def get_multiple_tts(items: TextList, redis_conn=Depends(get_redis)):
     ]
     headers = {"Cache-Control": "max-age=3600"}
     return JSONResponse(content=audio_contents, headers=headers)
+
+
+@app.get("/get_tts_base64")
+async def get_tts_base64_query(text: str = Query(...), redis_conn=Depends(get_redis)):
+    audio_base64 = await TTS.get_tts_base64(text, redis_conn)
+    headers = {"Cache-Control": "max-age=3600"}
+    return JSONResponse(content={"audio_base64": audio_base64}, headers=headers)
 
 
 if __name__ == "__main__":
