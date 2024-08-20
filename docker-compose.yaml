@@ -9,7 +9,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '8000:8000' # Changed host port to 8001
+      - '8001:8000' # Changed host port to 8001
     environment:
       TTS_BASE_URL: 'http://msspeechserver:8080/SetTTS'
       REDIS_HOST: 'redis'
