@@ -3,15 +3,13 @@ version: '3.8'
 services:
   msspeechserver:
     image: mukund1606/msspeechserver:v2
-    ports:
-      - '8080:8080'
 
   fastapi-tts:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '8001:8000' # Changed host port to 8001
+      - '8000:8000' # Changed host port to 8001
     environment:
       TTS_BASE_URL: 'http://msspeechserver:8080/SetTTS'
       REDIS_HOST: 'redis'
