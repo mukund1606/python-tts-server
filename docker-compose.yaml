@@ -13,7 +13,7 @@ services:
     environment:
       TTS_BASE_URL: 'http://msspeechserver:8080/SetTTS'
       REDIS_HOST: 'redis'
-      REDIS_PORT: 6379
+      REDIS_PORT: 6380
     depends_on:
       - msspeechserver
       - redis
@@ -21,7 +21,7 @@ services:
   redis:
     image: redis:latest
     ports:
-      - '6379:6379'
+      - '6380:6379'
     deploy:
       resources:
         limits:
