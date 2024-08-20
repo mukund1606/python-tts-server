@@ -3,6 +3,8 @@ version: '3.8'
 services:
   msspeechserver:
     image: mukund1606/msspeechserver:v2
+    ports:
+      - '8002:8080'
 
   fastapi-tts:
     build:
@@ -11,9 +13,9 @@ services:
     ports:
       - '8001:8000' # Changed host port to 8001
     environment:
-      TTS_BASE_URL: 'http://msspeechserver:8080/SetTTS'
+      TTS_BASE_URL: 'http://msspeechserver:8002/SetTTS'
       REDIS_HOST: 'redis'
-      REDIS_PORT: 6380
+      REDIS_PORT: 6379
     depends_on:
       - msspeechserver
       - redis
@@ -21,7 +23,7 @@ services:
   redis:
     image: redis:latest
     ports:
-      - '6380:6379'
+      - '6379:6379'
     deploy:
       resources:
         limits:
