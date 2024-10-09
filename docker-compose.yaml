@@ -12,8 +12,8 @@ services:
       TTS_BASE_URL: 'http://msspeechserver:8080/SetTTS'
       REDIS_HOST: 'redis'
       REDIS_PORT: 6379
-    ports:
-      - '8000:8000'
+    # ports:
+    #   - '8000:8000'
     depends_on:
       - msspeechserver
       - redis
