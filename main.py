@@ -2,6 +2,9 @@ from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import Column, String
 from typing import List
 import base64
 import requests
@@ -10,13 +13,13 @@ from pydub.silence import detect_nonsilent
 from io import BytesIO
 import os
 from dotenv import load_dotenv
-import redis.asyncio as redis
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = FastAPI()
 
+# Set up allowed origins for CORS
 origins = [
     "http://localhost",
     "http://localhost:3000",
@@ -30,6 +33,40 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Database Configuration
+DB_PATH = "/app/data/cache.db"  # Persistent path for SQLite database
+DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
+engine = create_async_engine(DATABASE_URL, echo=True)
+SessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+Base = declarative_base()
+
+
+# Define the Cache Table
+class Cache(Base):
+    __tablename__ = "cache"
+
+    key = Column(String, primary_key=True, index=True)
+    value = Column(String)
+
+
+# Initialize the database
+async def initialize_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+@app.on_event("startup")
+async def on_startup():
+    # Ensure the persistent directory exists
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    await initialize_db()
+
+
+# Dependency to get DB session
+async def get_db():
+    async with SessionLocal() as session:
+        yield session
 
 
 class TextItem(BaseModel):
@@ -46,12 +83,15 @@ class TTS:
     session = requests.Session()
 
     @staticmethod
-    async def get_tts(text: str, redis_conn):
+    async def get_tts(text: str, db: AsyncSession):
         text = text.lower().strip()
-        cached_audio = await redis_conn.get(text)
-        if cached_audio:
-            return base64.b64decode(cached_audio)
 
+        # Check SQLite cache via ORM
+        cached_audio = await db.get(Cache, text)
+        if cached_audio:
+            return base64.b64decode(cached_audio.value)
+
+        # Fetch audio from TTS service
         response = TTS.session.get(
             TTS.URL, params={"text": text, "voiceName": TTS.VOICE}
         )
@@ -61,7 +101,12 @@ class TTS:
             )
         audio_content = response.content
         trimmed_audio = TTS.remove_silence(audio_content)
-        await redis_conn.set(text, base64.b64encode(trimmed_audio).decode("utf-8"))
+
+        # Cache result in SQLite
+        new_cache = Cache(key=text, value=base64.b64encode(trimmed_audio).decode("utf-8"))
+        db.add(new_cache)
+        await db.commit()
+
         return trimmed_audio
 
     @staticmethod
@@ -80,31 +125,22 @@ class TTS:
         return audio_content
 
     @staticmethod
-    async def get_tts_base64(text: str, redis_conn):
-        audio_content = await TTS.get_tts(text, redis_conn)
+    async def get_tts_base64(text: str, db: AsyncSession):
+        audio_content = await TTS.get_tts(text, db)
         return base64.b64encode(audio_content).decode("utf-8")
 
 
-async def get_redis():
-    redis_conn = redis.from_url(
-        f"redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', 6379)}",
-        encoding="utf-8",
-        decode_responses=True,
-    )
-    return redis_conn
-
-
 @app.post("/get_tts_base64")
-async def get_tts_base64(item: TextItem, redis_conn=Depends(get_redis)):
-    audio_base64 = await TTS.get_tts_base64(item.text, redis_conn)
+async def get_tts_base64(item: TextItem, db: AsyncSession = Depends(get_db)):
+    audio_base64 = await TTS.get_tts_base64(item.text, db)
     headers = {"Cache-Control": "max-age=3600"}
     return JSONResponse(content={"audio_base64": audio_base64}, headers=headers)
 
 
 @app.post("/get_multiple_tts")
-async def get_multiple_tts(items: TextList, redis_conn=Depends(get_redis)):
+async def get_multiple_tts(items: TextList, db: AsyncSession = Depends(get_db)):
     audio_contents = [
-        {"text": text, "base64": await TTS.get_tts_base64(text, redis_conn)}
+        {"text": text, "base64": await TTS.get_tts_base64(text, db)}
         for text in items.texts
     ]
     headers = {"Cache-Control": "max-age=3600"}
@@ -112,8 +148,8 @@ async def get_multiple_tts(items: TextList, redis_conn=Depends(get_redis)):
 
 
 @app.get("/get_tts_base64")
-async def get_tts_base64_query(text: str = Query(...), redis_conn=Depends(get_redis)):
-    audio_base64 = await TTS.get_tts_base64(text, redis_conn)
+async def get_tts_base64_query(text: str = Query(...), db: AsyncSession = Depends(get_db)):
+    audio_base64 = await TTS.get_tts_base64(text, db)
     headers = {"Cache-Control": "max-age=3600"}
     return JSONResponse(content={"audio_base64": audio_base64}, headers=headers)
 

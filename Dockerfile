@@ -5,7 +5,7 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Install ffmpeg and clean up apt cache
-RUN apt-get update && apt-get install -y ffmpeg && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ffmpeg sqlite3 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements.txt into the container
 COPY requirements.txt /app/requirements.txt
@@ -15,6 +15,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the current directory contents into the container at /app
 COPY . /app
+
+# Create a directory for SQLite database
+RUN mkdir -p /app/data
 
 # Make port 3000 available to the world outside this container
 EXPOSE 3000

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   msspeechserver:
     image: mukund1606/msspeechserver:v2
@@ -10,19 +8,12 @@ services:
       dockerfile: Dockerfile
     environment:
       TTS_BASE_URL: 'http://msspeechserver:8080/SetTTS'
-      REDIS_HOST: 'redis'
-      REDIS_PORT: 6379
     # ports:
-    #   - '8000:8000'
+    #   - 3000:3000
+    volumes:
+      - sqlite-data:/app/data
     depends_on:
       - msspeechserver
-      - redis
 
-  redis:
-    image: redis:latest
-    ports:
-      - '6379:6379'
-    deploy:
-      resources:
-        limits:
-          memory: '1G' # Set Redis memory limit to 1GB
+volumes:
+  sqlite-data:

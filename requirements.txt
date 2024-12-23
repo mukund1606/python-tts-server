@@ -4,5 +4,6 @@ requests
 pydub
 uvicorn
 python-dotenv
-redis
 gunicorn
+sqlalchemy[asyncio]
+aiosqlite
