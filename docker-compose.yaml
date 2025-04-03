@@ -9,7 +9,7 @@ services:
     environment:
       TTS_BASE_URL: 'http://msspeechserver:8080/SetTTS'
     ports:
-      - 3000:3000
+      - 3001:3000
     volumes:
       - sqlite-data:/app/data
     depends_on:
