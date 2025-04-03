@@ -1,6 +1,8 @@
 services:
   msspeechserver:
     image: mukund1606/msspeechserver:v2
+    networks:
+      - tts-network
 
   fastapi-tts:
     build:
@@ -12,6 +14,12 @@ services:
       - sqlite-data:/app/data
     depends_on:
       - msspeechserver
+    networks:
+      - tts-network
 
 volumes:
   sqlite-data:
+
+networks:
+  tts-network:
+    driver: bridge
