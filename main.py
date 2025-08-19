@@ -24,6 +24,7 @@ origins = [
     "http://localhost",
     "http://localhost:3000",
     "https://portal.shriijeesmartabacus.com",
+    "https://portal.shriijeesmartmaths.com"
 ]
 
 app.add_middleware(
