@@ -16,6 +16,8 @@ services:
       - msspeechserver
     networks:
       - tts-network
+    ports:
+      - 8000:8000
 
 volumes:
   sqlite-data:
