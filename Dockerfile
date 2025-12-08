@@ -1,4 +1,4 @@
-# Use the official Python slim image from the Docker Hub
+78# Use the official Python slim image from the Docker Hub
 FROM python:3.9-slim
 
 # Set the working directory in the container
@@ -20,10 +20,10 @@ COPY . /app
 RUN mkdir -p /app/data
 
 # Make port 3000 available to the world outside this container
-EXPOSE 3000
+EXPOSE 8000
 
 # Define environment variable
 ENV NAME=FastAPI-TTS
 
 # Run the Gunicorn server with Uvicorn workers
-CMD ["gunicorn", "main:app", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:3000", "--workers", "9"]
+CMD ["gunicorn", "main:app", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--workers", "9"]
