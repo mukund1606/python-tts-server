@@ -19,8 +19,11 @@ COPY . /app
 # Create a directory for SQLite database
 RUN mkdir -p /app/data
 
+# Make port 8000 available to the world outside this container
+EXPOSE 8000
+
 # Define environment variable
 ENV NAME=FastAPI-TTS
 
 # Run the Gunicorn server with Uvicorn workers
-CMD ["gunicorn", "main:app", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:3000", "--workers", "9"]
+CMD ["gunicorn", "main:app", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--workers", "9"]

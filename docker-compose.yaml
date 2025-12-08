@@ -17,7 +17,7 @@ services:
     networks:
       - tts-network
     ports:
-      - 3000:3000
+      - 8000:8000
 
 volumes:
   sqlite-data:
