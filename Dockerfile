@@ -19,9 +19,6 @@ COPY . /app
 # Create a directory for SQLite database
 RUN mkdir -p /app/data
 
-# Make port 3000 available to the world outside this container
-EXPOSE 3000
-
 # Define environment variable
 ENV NAME=FastAPI-TTS
 
